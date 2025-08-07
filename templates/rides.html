@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corridas - Motorista Particular</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i data-feather="car"></i>
+                Motorista Particular
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('index') }}">Dashboard</a>
+                <a class="nav-link active" href="{{ url_for('rides') }}">Corridas</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1>
+                        <i data-feather="map-pin"></i>
+                        Todas as Corridas
+                    </h1>
+                    <button class="btn btn-primary" onclick="location.reload()">
+                        <i data-feather="refresh-cw"></i>
+                        Atualizar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Buttons -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="btn-group" role="group">
+                    <input type="radio" class="btn-check" name="statusFilter" id="all" autocomplete="off" checked>
+                    <label class="btn btn-outline-secondary" for="all">Todas</label>
+
+                    <input type="radio" class="btn-check" name="statusFilter" id="pending" autocomplete="off">
+                    <label class="btn btn-outline-warning" for="pending">Pendentes</label>
+
+                    <input type="radio" class="btn-check" name="statusFilter" id="confirmed" autocomplete="off">
+                    <label class="btn btn-outline-success" for="confirmed">Confirmadas</label>
+
+                    <input type="radio" class="btn-check" name="statusFilter" id="cancelled" autocomplete="off">
+                    <label class="btn btn-outline-danger" for="cancelled">Canceladas</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rides Table -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        {% if rides %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Data/Hora</th>
+                                            <th>Cliente</th>
+                                            <th>Passageiros</th>
+                                            <th>Origem</th>
+                                            <th>Destino</th>
+                                            <th>Distância</th>
+                                            <th>Tempo</th>
+                                            <th>Valor</th>
+                                            <th>Status</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for ride in rides %}
+                                        <tr data-status="{{ ride.status }}">
+                                            <td>
+                                                <code>#{{ ride.id }}</code>
+                                            </td>
+                                            <td>
+                                                <div>{{ ride.created_at.strftime('%d/%m/%Y') }}</div>
+                                                <small class="text-muted">{{ ride.created_at.strftime('%H:%M:%S') }}</small>
+                                            </td>
+                                            <td>
+                                                <small>{{ ride.customer_phone }}</small>
+                                            </td>
+                                            <td>
+                                                <i data-feather="users"></i>
+                                                {{ ride.passengers }}
+                                            </td>
+                                            <td>
+                                                <div class="text-truncate" style="max-width: 200px;" title="{{ ride.pickup_location }}">
+                                                    {{ ride.pickup_location }}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="text-truncate" style="max-width: 200px;" title="{{ ride.destination }}">
+                                                    {{ ride.destination }}
+                                                </div>
+                                            </td>
+                                            <td>{{ "%.1f"|format(ride.distance_km) }} km</td>
+                                            <td>{{ ride.duration_minutes }} min</td>
+                                            <td>
+                                                <strong>R$ {{ "%.2f"|format(ride.price) }}</strong>
+                                            </td>
+                                            <td>
+                                                {% if ride.status == 'confirmed' %}
+                                                    <span class="badge bg-success">
+                                                        <i data-feather="check-circle"></i>
+                                                        Confirmada
+                                                    </span>
+                                                {% elif ride.status == 'pending' %}
+                                                    <span class="badge bg-warning">
+                                                        <i data-feather="clock"></i>
+                                                        Pendente
+                                                    </span>
+                                                {% elif ride.status == 'cancelled' %}
+                                                    <span class="badge bg-danger">
+                                                        <i data-feather="x-circle"></i>
+                                                        Cancelada
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ ride.status.title() }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary" onclick="showRideDetails('{{ ride.id }}')">
+                                                        <i data-feather="eye"></i>
+                                                    </button>
+                                                    {% if ride.status == 'confirmed' %}
+                                                    <a href="https://www.google.com/maps/dir/{{ ride.pickup_location }}/{{ ride.destination }}" target="_blank" class="btn btn-outline-info">
+                                                        <i data-feather="navigation"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i data-feather="inbox" class="text-muted mb-3" style="width: 64px; height: 64px;"></i>
+                                <h4 class="text-muted">Nenhuma corrida encontrada</h4>
+                                <p class="text-muted">As corridas solicitadas via WhatsApp aparecerão aqui</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ride Details Modal -->
+    <div class="modal fade" id="rideDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i data-feather="info"></i>
+                        Detalhes da Corrida
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="rideDetailsContent">
+                    <!-- Content will be loaded dynamically -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        feather.replace();
+
+        // Status filter functionality
+        document.querySelectorAll('input[name="statusFilter"]').forEach(filter => {
+            filter.addEventListener('change', function() {
+                const status = this.id;
+                const rows = document.querySelectorAll('tbody tr');
+                
+                rows.forEach(row => {
+                    if (status === 'all' || row.dataset.status === status) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // Show ride details in modal
+        function showRideDetails(rideId) {
+            // Find the ride data from the table
+            const row = document.querySelector(`tr code:contains("#${rideId}")`);
+            if (!row) return;
+            
+            // Extract ride details from the row
+            const cells = row.closest('tr').cells;
+            
+            const content = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Informações Básicas</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>ID:</strong></td><td>#${rideId}</td></tr>
+                            <tr><td><strong>Data/Hora:</strong></td><td>${cells[1].textContent.trim()}</td></tr>
+                            <tr><td><strong>Cliente:</strong></td><td>${cells[2].textContent.trim()}</td></tr>
+                            <tr><td><strong>Passageiros:</strong></td><td>${cells[3].textContent.trim()}</td></tr>
+                            <tr><td><strong>Status:</strong></td><td>${cells[9].textContent.trim()}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Detalhes da Viagem</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Distância:</strong></td><td>${cells[6].textContent.trim()}</td></tr>
+                            <tr><td><strong>Tempo:</strong></td><td>${cells[7].textContent.trim()}</td></tr>
+                            <tr><td><strong>Valor:</strong></td><td>${cells[8].textContent.trim()}</td></tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6>Endereços</h6>
+                        <div class="mb-2">
+                            <strong>Origem:</strong><br>
+                            <span class="text-muted">${cells[4].title || cells[4].textContent.trim()}</span>
+                        </div>
+                        <div>
+                            <strong>Destino:</strong><br>
+                            <span class="text-muted">${cells[5].title || cells[5].textContent.trim()}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('rideDetailsContent').innerHTML = content;
+            new bootstrap.Modal(document.getElementById('rideDetailsModal')).show();
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(function() {
+            location.reload();
+        }, 30000);
+    </script>
+</body>
+</html>
