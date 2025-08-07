@@ -20,7 +20,7 @@ const client = new Client({
 
 client.on('qr', qr => {
     qrcode.generate(qr, { small: true });
-    console.log('📱 Escaneie o QR Code com o WhatsApp do motorista...');
+    console.log('📱 Escaneie o QR Code com o número do BOT (atendimento automático).');
 });
 
 client.on('ready', () => {
